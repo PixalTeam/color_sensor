@@ -1,93 +1,71 @@
-#include<TimerOne.h>
+/*********
+  Rui Santos
+  Complete project details at http://randomnerdtutorials.com  
+*********/
 
+// TCS230 or TCS3200 pins wiring to Arduino
 #define S0 6
 #define S1 5
 #define S2 4
-#define S3 3
-#define OUT 2
+#define S3 2
+#define sensorOut 2
 
-int g_count = 0;
-int g_array[3];
-int g_flag = 0;
-float g_SF[3];
+// Stores frequency read by the photodiodes
+int redFrequency = 0;
+int greenFrequency = 0;
+int blueFrequency = 0;
 
-void TSC_Init() {
+void setup() {
+  // Setting the outputs
   pinMode(S0, OUTPUT);
   pinMode(S1, OUTPUT);
   pinMode(S2, OUTPUT);
   pinMode(S3, OUTPUT);
-  pinMode(OUT, INPUT);
-  digitalWrite(S0, LOW);
-  digitalWrite(S1, HIGH);
-}
-void TSC_FilterColor(int Level01, int Level02) {
-  if (Level01 != 0) {
-    Level01 = HIGH;
-  }
-  if (Level02 != 0) {
-    Level02 = HIGH;
-  }
-  digitalWrite(S2, Level01);
-  digitalWrite(S3, Level02);
-}
-void TSC_Count() {
-  g_count ++;
-}
-void TSC_Callback() {
-  switch (g_flag) {
-    case 0:
-      Serial.println("->WB Start");
-      TSC_WB(LOW, LOW);
-      break;
-    case 1:
-      Serial.print("->Frequency R=");
-      Serial.println(g_count);
-      g_array[0] = g_count;
-      TSC_WB(HIGH, HIGH);
-      break;
-    case 2:
-      Serial.print("->Frequency G=");
-      Serial.println(g_count);
-      g_array[1] = g_count;
-      TSC_WB(LOW, HIGH);
-      break;
-    case 3:
-      Serial.print("->Frequency B=");
-      Serial.println(g_count);
-      Serial.println("->WB End");
-      g_array[2] = g_count;
-      TSC_WB(HIGH, LOW);
-      break;
-    default:
-      g_count = 0;
-      break;
-  }
-}
-void TSC_WB(int Level0, int Level1) {
-  g_count = 0;
-  g_flag ++;
-  TSC_FilterColor(Level0, Level1);
-  Timer1.setPeriod(1000000);
-}
-void setup() {
-  TSC_Init();
+  
+  // Setting the sensorOut as an input
+  pinMode(sensorOut, INPUT);
+  
+  // Setting frequency scaling to 20%
+  digitalWrite(S0,HIGH);
+  digitalWrite(S1,LOW);
+  
+   // Begins serial communication 
   Serial.begin(9600);
-  Timer1.initialize();
-  Timer1.attachInterrupt(TSC_Callback);
-  attachInterrupt(0, TSC_Count, RISING);
-  delay(4000);
-  for (int i = 0; i < 3; i++)
-    Serial.println(g_array[i]);
-  g_SF[0] = 255.0 / g_array[0];
-  g_SF[1] = 255.0 / g_array[1] ;
-  g_SF[2] = 255.0 / g_array[2] ;
-  Serial.println(g_SF[0]);
-  Serial.println(g_SF[1]);
-  Serial.println(g_SF[2]);
 }
 void loop() {
-  g_flag = 0;
-  for (int i = 0; i < 3; i++)
-    Serial.println(int(g_array[i] * g_SF[i]));
-  delay(4000);
+  // Setting RED (R) filtered photodiodes to be read
+  digitalWrite(S2,LOW);
+  digitalWrite(S3,LOW);
+  
+  // Reading the output frequency
+  redFrequency = pulseIn(sensorOut, LOW);
+  
+   // Printing the RED (R) value
+  Serial.print("R = ");
+  Serial.print(redFrequency);
+  delay(100);
+  
+  // Setting GREEN (G) filtered photodiodes to be read
+  digitalWrite(S2,HIGH);
+  digitalWrite(S3,HIGH);
+  
+  // Reading the output frequency
+  greenFrequency = pulseIn(sensorOut, LOW);
+  
+  // Printing the GREEN (G) value  
+  Serial.print(" G = ");
+  Serial.print(greenFrequency);
+  delay(100);
+ 
+  // Setting BLUE (B) filtered photodiodes to be read
+  digitalWrite(S2,LOW);
+  digitalWrite(S3,HIGH);
+  
+  // Reading the output frequency
+  blueFrequency = pulseIn(sensorOut, LOW);
+  
+  // Printing the BLUE (B) value 
+  Serial.print(" B = ");
+  Serial.println(blueFrequency);
+  delay(100);
 }
