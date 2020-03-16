@@ -7,7 +7,7 @@
 #define S0 6
 #define S1 5
 #define S2 4
-#define S3 2
+#define S3 3
 #define sensorOut 2
 
 // Stores frequency read by the photodiodes
